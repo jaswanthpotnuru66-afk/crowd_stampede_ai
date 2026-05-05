@@ -1,7 +1,12 @@
 # CrowdSentinel AI 🚨
 
 > Real-time crowd stampede risk prediction using Swin Transformer + LSTM — trained on HajjV2, deployed via FastAPI + React.
-
+![Python](https://img.shields.io/badge/Python-3.11-blue?style=flat-square&logo=python)
+![PyTorch](https://img.shields.io/badge/PyTorch-2.1-EE4C2C?style=flat-square&logo=pytorch)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.104-009688?style=flat-square&logo=fastapi)
+![React](https://img.shields.io/badge/React-18.2-61DAFB?style=flat-square&logo=react)
+![ONNX](https://img.shields.io/badge/ONNX-Runtime-005CED?style=flat-square)
+[![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 <img width="1881" height="895" alt="Screenshot 2026-04-21 095649" src="https://github.com/user-attachments/assets/82d7835f-e565-43d0-9f02-b1373024b918" />
 
 
