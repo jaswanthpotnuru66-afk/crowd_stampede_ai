@@ -160,7 +160,7 @@ python prepare_data.py
 python train.py
 ```
 
-Or skip training — download the pretrained ONNX model from [Releases](#).
+Or skip training — download the pretrained ONNX model from [Releases](https://github.com/jaswanthpotnuru66-afk/crowd_stampede_ai/releases/tag/v1.0.0).
 
 ### 4. Export to ONNX
 
