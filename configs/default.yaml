@@ -1,0 +1,83 @@
+model:
+  # BEFORE retrain: keep swin_tiny (matches old checkpoints)
+  # AFTER  `del checkpoints\*.pth`: change to swin_small_patch4_window7_224
+  swin_variant: "swin_tiny_patch4_window7_224"
+  lstm_hidden: 512
+  lstm_layers: 2
+  num_classes: 3          # low / moderate / high risk
+
+training:
+  epochs: 3
+  batch_size: 4
+  seq_len: 8
+  lr: 0.00005             # lower LR with swin_small for stable fine-tuning
+  weight_decay: 0.0001
+  scheduler: cosine
+  warmup_epochs: 5
+  grad_clip: 1.0
+  save_every: 5
+  resume: false           # set true to resume from last.pth
+  resume_path: checkpoints/last.pth
+  density_scale: 500.0
+  density_loss_weight: 1.0
+  risk_loss_weight: 4.0
+  focal_gamma: 2.0        # focal loss focusing parameter
+  label_smoothing: 0.1    # prevents classifier overconfidence
+  # Inverse-frequency weights: total=945, Low=346→2.7, Mod=151→6.3, High=448→2.1
+  risk_class_weights: [2.7, 6.3, 2.1]
+  seq_len: 8             # reduced for CPU speed
+
+data:
+  dataset: hajjv2
+  root: data/hajjv2
+  img_size: 224
+  num_workers: 0
+  stride: 15              # Optimized for CPU speed (est. 45 min total)
+  frame_stride: 15         # extract every Nth frame
+
+paths:
+  checkpoints: checkpoints
+  exports: exports
+  results: results
+  logs: logs
+
+inference:
+  device: cpu
+  conf_threshold: 0.5
+  onnx_path: exports/crowd_model.onnx
+  use_onnx: true          # set false to use .pth
+
+risk:
+  low_density: 2.0        # persons/m²
+  moderate_density: 4.0
+  high_density: 6.0
+  turbulence_threshold: 0.3
+  label_low_count: 0.08
+  label_high_count: 0.09
+  avg_speed_threshold: 1.5   # px / frame interval
+  density_high_override: 0.09
+  density_moderate_override: 0.08
+  density_override_area_min: 0.45
+  zone_rows: 2
+  zone_cols: 3
+  zone_min_share: 0.12
+  hotspot_share_moderate: 0.20
+  hotspot_share_high: 0.28
+  zone_growth_moderate: 0.02
+  zone_growth_high: 0.05
+  total_growth_moderate: 0.05
+  total_growth_high: 0.10
+  count_guard_ratio: 0.08
+  distributed_zone_count: 4
+  free_flow_speed: 0.9
+  congestion_speed: 0.45
+  speed_drop_moderate: 0.15
+  speed_drop_high: 0.35
+  turbulence_low: 0.18
+
+pseudo_labels:
+  count_mode: hybrid       # heuristic | detector | hybrid
+  detector_conf: 0.35
+  yolo_weight: 0.7         # detector weight before dense-scene fallback
+  dense_scene_threshold: 0.14
+  min_detector_count: 3

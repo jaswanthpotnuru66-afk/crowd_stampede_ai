@@ -1,0 +1,21 @@
+defaults:
+  - default
+
+inference:
+  device: cpu
+  use_onnx: true
+  onnx_path: exports/crowd_model.onnx
+  source: "webcam"         # or path to .mp4
+  show_display: false
+  save_output: true
+  output_dir: results/
+  fps_target: 15
+  # configs/infer.yaml
+# Settings used during inference and API serving
+
+inference:
+  seq_len:     8       # frames per sequence
+  skip_frames: 3       # analyze every Nth frame from live stream
+  fp16:        true    # use half precision for faster GPU inference
+  device:      cuda    # cuda or cpu
+  onnx:        false   # set true to use ONNX runtime instead of PyTorch

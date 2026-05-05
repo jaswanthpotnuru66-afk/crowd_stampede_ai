@@ -1,0 +1,20 @@
+data:
+  dataset: hajjv2
+  root: data/hajjv2
+  img_size: 448
+  num_workers: 4
+  frame_stride: 2
+
+train:
+  epochs:     100
+  batch_size: 4
+  lr: 0.0001
+  resume: ""
+  save_every: 5
+  val_every: 2
+  seq_len: 8
+  weight_decay: 0.0001
+
+logging:
+  log_dir: logs/
+  tensorboard: true
