@@ -24,7 +24,7 @@ uvicorn api.main:app --host 0.0.0.0 --port 8000
 cd frontend && npm install && npm run dev
 ```
 
-Open http://localhost:5173
+Open 
 
 ## Architecture
 - **Backbone**: Swin-Tiny (pretrained ImageNet-1K)
