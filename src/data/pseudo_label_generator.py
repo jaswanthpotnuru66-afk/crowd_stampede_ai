@@ -68,6 +68,11 @@ class PseudoLabelGenerator:
             else:
                 self.counter_error = counter.error
 
+    def reset(self):
+        """Reset motion accumulator and previous frame. Call between videos to prevent carryover."""
+        self.prev_gray = None
+        self._acc_motion = None
+
     def _prepare_gray(self, frame: np.ndarray) -> np.ndarray:
         frame = cv2.resize(frame, (self.img_size, self.img_size))
         return cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -83,10 +88,10 @@ class PseudoLabelGenerator:
             _, motion_mask = cv2.threshold(diff, 10, 1.0, cv2.THRESH_BINARY)
             frame_motion = cv2.GaussianBlur(motion_mask, (31, 31), 9)
 
-            # VERY high persistence (0.98) for stagnant crowds ensures that 
-            # once a region is flagged as having activity, it stays active
-            # for a long time even if people stop moving.
-            ALPHA = 0.98
+            # Moderate persistence (0.92) balances capturing static crowds
+            # while preventing stale motion from previous frames/videos.
+            # Reduces false HIGH predictions from accumulated background noise.
+            ALPHA = 0.92
             if self._acc_motion is None:
                 self._acc_motion = frame_motion
             else:
@@ -426,11 +431,20 @@ def generate_pseudo_labels(
     if generator.counter_error:
         print(f"YOLO counter unavailable, falling back to heuristic counts: {generator.counter_error}")
 
+    prev_video_name = None
     with metadata_path.open("a", encoding="utf-8") as meta_f:
         for path in tqdm(frame_paths, desc="Generating pseudo labels (hybrid)"):
             img = cv2.imread(str(path))
             if img is None:
                 continue
+
+            # Extract video name from frame filename (e.g., "video1_frame001.jpg" → "video1")
+            current_video_name = path.stem.rsplit("_f", 1)[0] if "_f" in path.stem else path.stem
+            
+            # Reset motion accumulator when switching to a new video
+            if prev_video_name is not None and current_video_name != prev_video_name:
+                generator.reset()
+            prev_video_name = current_video_name
 
             density_map, heuristic_count = generator.get_density_map(img)
             generator.get_optical_flow(img)

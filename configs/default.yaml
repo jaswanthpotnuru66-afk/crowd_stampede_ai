@@ -7,8 +7,8 @@ model:
   num_classes: 3          # low / moderate / high risk
 
 training:
-  epochs: 3
-  batch_size: 4
+  epochs: 10
+  batch_size: 8
   seq_len: 8
   lr: 0.00005             # lower LR with swin_small for stable fine-tuning
   weight_decay: 0.0001
@@ -32,8 +32,8 @@ data:
   root: data/hajjv2
   img_size: 224
   num_workers: 0
-  stride: 15              # Optimized for CPU speed (est. 45 min total)
-  frame_stride: 15         # extract every Nth frame
+  stride: 5               # Reduced for better training diversity (est. 2h total)
+  frame_stride: 5         # extract every Nth frame
 
 paths:
   checkpoints: checkpoints
@@ -52,8 +52,8 @@ risk:
   moderate_density: 4.0
   high_density: 6.0
   turbulence_threshold: 0.3
-  label_low_count: 0.08
-  label_high_count: 0.09
+  label_low_count: 0.05
+  label_high_count: 0.12
   avg_speed_threshold: 1.5   # px / frame interval
   density_high_override: 0.09
   density_moderate_override: 0.08
@@ -77,7 +77,7 @@ risk:
 
 pseudo_labels:
   count_mode: hybrid       # heuristic | detector | hybrid
-  detector_conf: 0.35
+  detector_conf: 0.45
   yolo_weight: 0.7         # detector weight before dense-scene fallback
   dense_scene_threshold: 0.14
   min_detector_count: 3
