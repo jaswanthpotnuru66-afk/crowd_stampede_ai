@@ -38,7 +38,7 @@ paths:
   logs: logs
 
 inference:
-  device: cpu
+  device: cuda  # change from cpu to cuda
   conf_threshold: 0.5
   onnx_path: exports/crowd_model.onnx
   use_onnx: true
