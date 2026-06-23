@@ -22,3 +22,4 @@ logs/
 .vscode/
 data/hajjv2/extracted_frames/
 data/hajjv2/pseudo_labels/
+*.zip
