@@ -9,7 +9,7 @@ import MotionMetrics    from "../components/MotionMetrics";
 import AlertBanner      from "../components/AlertBanner";
 import useVideoAnalysis from "../hooks/useVideoAnalysis";
 
-/* ── Icons ── */
+/* â”€â”€ Icons â”€â”€ */
 const CameraIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
     <path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
@@ -41,7 +41,7 @@ const BackIcon = () => (
   </svg>
 );
 
-/* ── System Clock ── */
+/* â”€â”€ System Clock â”€â”€ */
 function SystemClock() {
   const [time, setTime] = useState(new Date());
   useEffect(() => {
@@ -59,17 +59,17 @@ function SystemClock() {
   );
 }
 
-/* ── Ticker ── */
+/* â”€â”€ Ticker â”€â”€ */
 function TickerBar({ data, analyzing, liveData }) {
   const items = [
     { label: "System",           val: "ONLINE",                                                                            cls: "green" },
     { label: "Model",            val: "Swin-T + LSTM",                                                                     cls: "cyan"  },
-    { label: "Persons Detected", val: data?.count != null ? data.count.toLocaleString() : "—",                            cls: data?.count > 600 ? "red" : "cyan" },
+    { label: "Persons Detected", val: data?.count != null ? data.count.toLocaleString() : "â€”",                            cls: data?.count > 600 ? "red" : "cyan" },
     { label: "Risk Class",       val: data?.risk_class || "STANDBY",                                                       cls: data?.risk_class === "HIGH" ? "red" : data?.risk_class === "MODERATE" ? "amber" : "green" },
-    { label: "Coverage",         val: data?.crowd_coverage != null ? (data.crowd_coverage * 100).toFixed(1) + "%" : "—",  cls: data?.crowd_coverage > 0.65 ? "red" : "cyan" },
-    { label: "Turbulence",       val: data?.turbulence?.toFixed(3) || "—",                                                cls: "cyan"  },
-    { label: "Frames",           val: data?.frames_analyzed?.toLocaleString() || "—",                                     cls: "cyan"  },
-    { label: "Latency",          val: data?.latency_ms ? data.latency_ms + " ms" : "—",                                   cls: "green" },
+    { label: "Coverage",         val: data?.crowd_coverage != null ? (data.crowd_coverage * 100).toFixed(1) + "%" : "â€”",  cls: data?.crowd_coverage > 0.65 ? "red" : "cyan" },
+    { label: "Turbulence",       val: data?.turbulence?.toFixed(3) || "â€”",                                                cls: "cyan"  },
+    { label: "Frames",           val: data?.frames_analyzed?.toLocaleString() || "â€”",                                     cls: "cyan"  },
+    { label: "Latency",          val: data?.latency_ms ? data.latency_ms + " ms" : "â€”",                                   cls: "green" },
     { label: "Status",           val: analyzing ? "ANALYZING" : liveData ? "LIVE FEED" : "IDLE",                          cls: analyzing ? "amber" : liveData ? "green" : "cyan" },
     { label: "Precision",        val: "81%",                                                                               cls: "green" },
     { label: "F1 Score",         val: "0.80",                                                                              cls: "green" },
@@ -89,9 +89,9 @@ function TickerBar({ data, analyzing, liveData }) {
   );
 }
 
-/* ══════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    DASHBOARD PAGE
-══════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 export default function DashboardPage() {
   const navigate                  = useNavigate();
   const [tab, setTab]             = useState("upload");
@@ -112,7 +112,7 @@ export default function DashboardPage() {
   const handleLiveData = useCallback((data) => {
     setLiveData(data);
     if (data.risk_class === "HIGH" && !alert) {
-      setAlert({ message: "CRITICAL — Stampede conditions detected", sub: "Immediate crowd dispersal protocol required", time: new Date().toLocaleTimeString() });
+      setAlert({ message: "CRITICAL â€” Stampede conditions detected", sub: "Immediate crowd dispersal protocol required", time: new Date().toLocaleTimeString() });
       setTimeout(() => setAlert(null), 8000);
     }
   }, [alert]);
@@ -178,7 +178,7 @@ export default function DashboardPage() {
           <div className="status-pill">
             <div className={`status-dot ${analyzing ? "processing" : liveData ? "online" : "idle"}`} />
             <span className="status-text">
-              {analyzing ? "Analyzing…" : liveData ? "Live Feed Active" : "System Ready"}
+              {analyzing ? "Analyzingâ€¦" : liveData ? "Live Feed Active" : "System Ready"}
             </span>
           </div>
         </div>
@@ -222,6 +222,7 @@ export default function DashboardPage() {
               <MetricsChart
                 history={displayData.count_history || []}
                 riskClass={displayData.risk_class}
+                currentCount={displayData.count}
               />
             </>
           )}

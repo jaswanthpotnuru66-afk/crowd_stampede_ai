@@ -1,41 +1,70 @@
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect } from "react";
+
+function normalizeHistory(history, currentCount) {
+  const values = (history || [])
+    .map((value) => Number(value))
+    .filter((value) => Number.isFinite(value));
+
+  if (values.length === 0) return [];
+
+  const fallback = Number(currentCount) || 0;
+  const max = Math.max(...values);
+
+  if (max === 0 && fallback > 0) {
+    return values.map(() => Math.round(fallback));
+  }
+
+  if (max > 0 && max <= 1 && fallback > 1) {
+    return values.map((value) => Math.round((value / max) * fallback));
+  }
+
+  return values.map((value) => Math.max(0, Math.round(value)));
+}
+
+function formatCount(value) {
+  return Math.round(value).toLocaleString();
+}
 
 function TrendArrow({ history }) {
   if (history.length < 2) return null;
-  const last  = history[history.length - 1];
-  const prev  = history[history.length - 2];
+  const last = history[history.length - 1];
+  const prev = history[history.length - 2];
   const delta = last - prev;
-  const up    = delta > 0;
+  const up = delta > 0;
   const color = up ? "#ef4444" : "#10b981";
+
   return (
     <span style={{ color, fontSize: 10, fontFamily: "var(--mono)", display: "flex", alignItems: "center", gap: 3 }}>
-      {up ? "▲" : "▼"} {Math.abs(delta).toFixed(0)}
+      {up ? "UP" : "DOWN"} {formatCount(Math.abs(delta))}
     </span>
   );
 }
 
-export default function MetricsChart({ history = [], riskClass }) {
+export default function MetricsChart({ history = [], riskClass, currentCount = 0 }) {
   const svgRef = useRef(null);
+  const chartHistory = normalizeHistory(history, currentCount);
 
   useEffect(() => {
-    if (!svgRef.current || history.length < 2) return;
-    const W = 600, H = 140;
-    const mn = Math.min(...history);
-    const mx = Math.max(...history) || 1;
+    if (!svgRef.current || chartHistory.length < 2) return;
+
+    const W = 600;
+    const H = 140;
+    const rawMin = Math.min(...chartHistory);
+    const rawMax = Math.max(...chartHistory);
+    const mn = rawMax === rawMin ? 0 : rawMin;
+    const mx = rawMax === rawMin ? Math.max(rawMax, 1) : rawMax;
     const range = mx - mn || 1;
 
-    const color   = riskClass === "HIGH" ? "#ef4444" : riskClass === "MODERATE" ? "#f97316" : "#22c55e";
-    const color2  = riskClass === "HIGH" ? "#dc2626" : riskClass === "MODERATE" ? "#ea580c" : "#16a34a";
-    const glowId  = "chartGlow";
-    const gradId  = "chartGrad";
+    const color = riskClass === "HIGH" ? "#ef4444" : riskClass === "MODERATE" ? "#f97316" : "#22c55e";
+    const glowId = "chartGlow";
+    const gradId = "chartGrad";
     const gridColor = "rgba(255,255,255,0.04)";
 
-    const pts = history.map((v, i) => ({
-      x: (i / (history.length - 1)) * W,
+    const pts = chartHistory.map((v, i) => ({
+      x: (i / (chartHistory.length - 1)) * W,
       y: H - 14 - ((v - mn) / range) * (H - 28),
     }));
 
-    // Smooth bezier line
     const line = pts.map((p, i) => {
       if (i === 0) return `M ${p.x.toFixed(1)} ${p.y.toFixed(1)}`;
       const prev = pts[i - 1];
@@ -59,8 +88,7 @@ export default function MetricsChart({ history = [], riskClass }) {
       "Z",
     ].join(" ");
 
-    // Grid lines at 25%, 50%, 75%
-    const gridLines = [0.25, 0.5, 0.75].map(frac => {
+    const gridLines = [0.25, 0.5, 0.75].map((frac) => {
       const y = H - 14 - frac * (H - 28);
       const val = Math.round(mn + frac * range);
       return `
@@ -92,25 +120,25 @@ export default function MetricsChart({ history = [], riskClass }) {
         <animate attributeName="opacity" values="0.3;0;0.3" dur="2s" repeatCount="indefinite"/>
       </circle>
     `;
-  }, [history, riskClass]);
+  }, [chartHistory, riskClass]);
 
   const riskColor = riskClass === "HIGH" ? "#ef4444" : riskClass === "MODERATE" ? "#f97316" : "#22c55e";
-  const lastVal   = history.length > 0 ? history[history.length - 1] : null;
-  const minVal    = history.length >= 2 ? Math.min(...history) : null;
-  const maxVal    = history.length >= 2 ? Math.max(...history) : null;
+  const lastVal = chartHistory.length > 0 ? chartHistory[chartHistory.length - 1] : null;
+  const minVal = chartHistory.length >= 2 ? Math.min(...chartHistory) : null;
+  const maxVal = chartHistory.length >= 2 ? Math.max(...chartHistory) : null;
 
   return (
     <div className="card">
       <div className="card-header">
         <div>
           <div className="card-title">Crowd Count History</div>
-          <div className="card-sub">Detected persons over time · {history.length} samples</div>
+          <div className="card-sub">Detected persons over time · {chartHistory.length} samples</div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          {history.length >= 2 && <TrendArrow history={history} />}
+          {chartHistory.length >= 2 && <TrendArrow history={chartHistory} />}
           {lastVal != null && (
             <span style={{ fontSize: 18, fontWeight: 800, fontFamily: "var(--mono)", color: riskColor, letterSpacing: "-.02em" }}>
-              {lastVal.toLocaleString()}
+              {formatCount(lastVal)}
               <span style={{ fontSize: 10, color: "var(--text-lo)", fontWeight: 500, marginLeft: 4 }}>persons</span>
             </span>
           )}
@@ -118,14 +146,14 @@ export default function MetricsChart({ history = [], riskClass }) {
       </div>
 
       <div style={{ padding: "16px 20px 8px" }}>
-        {history.length < 2 ? (
+        {chartHistory.length < 2 ? (
           <div style={{
             height: 140, background: "rgba(16,10,14,0.65)", borderRadius: 10,
             display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8,
             border: "1px solid var(--border-dim)",
           }}>
-            <div style={{ fontSize: 28, opacity: 0.28 }}>📊</div>
-            <span style={{ fontSize: 11, color: "var(--text-lo)" }}>Awaiting analysis data…</span>
+            <div style={{ fontSize: 28, opacity: 0.28 }}>CHART</div>
+            <span style={{ fontSize: 11, color: "var(--text-lo)" }}>Awaiting analysis data...</span>
           </div>
         ) : (
           <div style={{ position: "relative" }}>
@@ -144,15 +172,14 @@ export default function MetricsChart({ history = [], riskClass }) {
           </div>
         )}
 
-        {/* Stats bar below chart */}
-        {history.length >= 2 && (
+        {chartHistory.length >= 2 && (
           <div style={{ display: "flex", justifyContent: "space-between", marginTop: 10, gap: 8 }}>
             {[
-              { label: "MIN", val: minVal?.toLocaleString(), color: "#22c55e" },
-              { label: "AVG", val: Math.round(history.reduce((a, b) => a + b, 0) / history.length).toLocaleString(), color: "var(--accent)" },
-              { label: "MAX", val: maxVal?.toLocaleString(), color: "#ef4444" },
-              { label: "SAMPLES", val: history.length, color: "var(--text-lo)" },
-            ].map(s => (
+              { label: "MIN", val: formatCount(minVal), color: "#22c55e" },
+              { label: "AVG", val: formatCount(chartHistory.reduce((a, b) => a + b, 0) / chartHistory.length), color: "var(--accent)" },
+              { label: "MAX", val: formatCount(maxVal), color: "#ef4444" },
+              { label: "SAMPLES", val: chartHistory.length, color: "var(--text-lo)" },
+            ].map((s) => (
               <div key={s.label} style={{
                 flex: 1, textAlign: "center",
                 padding: "7px 0",

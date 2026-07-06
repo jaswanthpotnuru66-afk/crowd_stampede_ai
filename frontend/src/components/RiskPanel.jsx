@@ -105,10 +105,6 @@ export default function RiskPanel({ data }) {
           <div className="risk-main-text">{mainText}</div>
           <div className="risk-sub-text">{subText}</div>
         </div>
-        {/* Risk index ring */}
-        <div style={{ flexShrink: 0 }}>
-          <RingGauge value={riskIndex} max={100} color={ringColor} label="Risk %" />
-        </div>
       </div>
 
       {/* Metric cells */}
