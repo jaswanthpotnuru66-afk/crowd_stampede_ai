@@ -110,9 +110,14 @@ export default function DashboardPage() {
   const handleAnalyze = useCallback(() => { analyze(videoFile); }, [analyze, videoFile]);
 
   const handleLiveData = useCallback((data) => {
-    setLiveData(data);
+    setLiveData((prev) => {
+      const history = prev?.count_history || [];
+      const newHistory = [...history, data.count];
+      if (newHistory.length > 30) newHistory.shift();
+      return { ...data, count_history: newHistory };
+    });
     if (data.risk_class === "HIGH" && !alert) {
-      setAlert({ message: "CRITICAL â€” Stampede conditions detected", sub: "Immediate crowd dispersal protocol required", time: new Date().toLocaleTimeString() });
+      setAlert({ message: "CRITICAL — Stampede conditions detected", sub: "Immediate crowd dispersal protocol required", time: new Date().toLocaleTimeString() });
       setTimeout(() => setAlert(null), 8000);
     }
   }, [alert]);

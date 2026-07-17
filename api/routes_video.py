@@ -69,21 +69,7 @@ def _process_video(video_path: Path, filename: str) -> dict:
             metrics = generator.get_risk_metrics(density, flow)
             heuristic_risk = _classify_upload_risk(metrics, metric_history)
 
-            # --- DEMO OVERRIDE LOGIC ---
-            import re
-            base_filename = re.sub(r'\s*\(\d+\)', '', filename)
-            
-            orig_risk = heuristic_risk
-            if base_filename in ['production_id_3941289.mp4', '13.mp4', '9.mp4', '2.mp4', 'production_id_4196258.mp4', '7.mp4', '11.mp4']:
-                heuristic_risk = "LOW"
-            elif base_filename in ['5.mp4', '8.mp4', '15.mp4']:
-                heuristic_risk = "MODERATE"
-            elif base_filename in ['10.mp4', '3.mp4', 'production_id_3687560.mp4', '14.mp4', '12.mp4']:
-                heuristic_risk = "HIGH"
-            
-            with open("debug_log.txt", "a") as dbgf:
-                dbgf.write(f"Frame={frame_idx}, file={filename}, base={base_filename}, orig={orig_risk}, new={heuristic_risk}\n")
-            # ---------------------------
+
 
             metric_history.append(metrics)
             risk_votes.append(heuristic_risk)
@@ -164,15 +150,16 @@ def _classify_upload_risk(metrics: dict, history: list[dict]) -> str:
     avg_speed = float(metrics.get("avg_speed", 0.0))
     turbulence = float(metrics.get("turbulence", 0.0))
 
-    recent_coverage = _mean(_metric_values(history[-5:], "crowd_coverage")) if history else coverage
+    valid_history = [m for m in history if float(m.get("crowd_coverage", 0.0)) > 0.001]
+    recent_coverage = _mean(_metric_values(valid_history[-5:], "crowd_coverage")) if valid_history else coverage
     density_growth = coverage - recent_coverage
 
     score = 0.0
-    if coverage >= 0.085:
+    if coverage >= 0.120:
         score += 2.0
-    elif coverage >= 0.078:
+    elif coverage >= 0.100:
         score += 1.0
-    elif coverage >= 0.072:
+    elif coverage >= 0.080:
         score += 0.4
 
     if dense_area >= 0.93:
@@ -180,12 +167,12 @@ def _classify_upload_risk(metrics: dict, history: list[dict]) -> str:
     elif dense_area >= 0.88:
         score += 0.5
 
-    if coverage >= 0.078 and avg_speed < 4.5:
+    if coverage >= 0.080 and avg_speed < 4.5:
         score += 1.0
-    elif coverage >= 0.078 and avg_speed < 7.0:
+    elif coverage >= 0.080 and avg_speed < 7.0:
         score += 0.4
 
-    if coverage >= 0.078 and turbulence > 0.65:
+    if coverage >= 0.080 and turbulence > 0.65:
         score += 0.5
 
     if density_growth > 0.004:
